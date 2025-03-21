@@ -12,6 +12,7 @@ export default function RegisterPage() {
 	const [email, setEmail] = useState("");
 	const [name, setName] = useState("");
 	const [password, setPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
 
@@ -19,6 +20,15 @@ export default function RegisterPage() {
 		e.preventDefault();
 		setError("");
 		setSuccess("");
+
+		if (password.length < 6) {
+			setError("Password must be at least 6 characters long.");
+			return;
+		}
+		if (password !== confirmPassword) {
+			setError("Passwords do not match.");
+			return;
+		}
 
 		const res = await fetch("/api/auth/register", {
 			method: "POST",
@@ -78,7 +88,7 @@ export default function RegisterPage() {
 							/>
 						</div>
 
-						<div className="mb-6">
+						<div className="mb-4">
 							<Label htmlFor="password">Password</Label>
 							<Input
 								id="password"
@@ -86,6 +96,17 @@ export default function RegisterPage() {
 								placeholder="Password"
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
+							/>
+						</div>
+
+						<div className="mb-6">
+							<Label htmlFor="confirmPassword">Confirm Password</Label>
+							<Input
+								id="confirmPassword"
+								type="password"
+								placeholder="Re-enter password"
+								value={confirmPassword}
+								onChange={(e) => setConfirmPassword(e.target.value)}
 							/>
 						</div>
 

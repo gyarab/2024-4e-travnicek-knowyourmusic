@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,24 +14,22 @@ export default function LoginPage() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
-	const [success, setSuccess] = useState("");
+	const router = useRouter();
 
 	const handleLogin = async (e) => {
 		e.preventDefault();
 		setError("");
-		setSuccess("");
 
-		const res = await fetch("/api/auth/login", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ email, password }),
+		const res = await signIn("credentials", {
+			redirect: false,
+			email,
+			password,
 		});
 
-		const data = await res.json();
-		if (!res.ok) {
-			setError(data.error);
+		if (res.error) {
+			setError(res.error);
 		} else {
-			setSuccess("Login successful!");
+			router.push("/dashboard"); // Redirect on success
 		}
 	};
 
@@ -46,12 +46,6 @@ export default function LoginPage() {
 						<Alert className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4">
 							<AlertTitle>Error</AlertTitle>
 							<AlertDescription>{error}</AlertDescription>
-						</Alert>
-					)}
-					{success && (
-						<Alert className="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-4">
-							<AlertTitle>Success</AlertTitle>
-							<AlertDescription>{success}</AlertDescription>
 						</Alert>
 					)}
 					<form onSubmit={handleLogin}>
@@ -82,6 +76,22 @@ export default function LoginPage() {
 						</Button>
 					</form>
 
+					<Alert className="mt-4 bg-blue-50 border-l-4 border-blue-400 text-blue-700 p-3">
+						<AlertTitle className="font-semibold">
+							Forgot your password?
+						</AlertTitle>
+						<AlertDescription>
+							Please contact{" "}
+							<a
+								href="mailto:admin@rop.cz"
+								className="underline font-medium text-blue-600 hover:text-blue-800"
+							>
+								admin@rop.cz
+							</a>{" "}
+							for password recovery.
+						</AlertDescription>
+					</Alert>
+
 					<p className="text-center text-sm text-gray-600 mt-4">
 						Don't have an account?{" "}
 						<Link
@@ -91,20 +101,6 @@ export default function LoginPage() {
 							Register here
 						</Link>
 					</p>
-
-					{/* Password Recovery Alert */}
-					<Alert className="mt-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3">
-						<AlertTitle className="font-semibold">
-							Forgot your password?
-						</AlertTitle>
-						<AlertDescription>
-							Please contact{" "}
-							<a href="mailto:admin@rop.cz" className="underline font-medium">
-								admin@rop.cz
-							</a>{" "}
-							for password recovery.
-						</AlertDescription>
-					</Alert>
 				</CardContent>
 			</Card>
 		</div>
