@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, Music, Disc } from "lucide-react";
+import { Search, Music, Disc, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -20,6 +20,8 @@ export default function SearchArtist() {
   const [selectedArtist, setSelectedArtist] = useState(null);
   const [topTracks, setTopTracks] = useState([]);
   const [artistLoading, setArtistLoading] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Custom debounce hook implementation
   const useDebounce = (callback, delay) => {
@@ -83,11 +85,74 @@ export default function SearchArtist() {
 
       const ttRes = await response.json();
       setTopTracks(ttRes);
+
+      // Check if this artist is in favorites
+      const favoriteResponse = await fetch(
+        `/api/favorites/check?artistId=${artistId}`
+      );
+      if (favoriteResponse.ok) {
+        const { isFavorite } = await favoriteResponse.json();
+        setIsFavorite(isFavorite);
+      }
     } catch (error) {
       console.error("Error fetching artist details:", error);
-      // You could add error handling UI here
     } finally {
       setArtistLoading(false);
+    }
+  };
+
+  // Add artist to favorites
+  const addToFavorites = async () => {
+    if (!selectedArtist) return;
+
+    try {
+      setFavoriteLoading(true);
+      const response = await fetch("/api/favorites/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ artistId: selectedArtist.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add artist to favorites");
+      }
+
+      setIsFavorite(true);
+      alert(`${selectedArtist.name} has been added to your favorites`);
+    } catch (error) {
+      console.error("Error adding to favorites:", error);
+      error("Failed to add artist to favorites. Please try again.");
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  const removeFromFavorites = async () => {
+    if (!selectedArtist) return;
+
+    try {
+      setFavoriteLoading(true);
+      const response = await fetch("/api/favorites/remove", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ artistId: selectedArtist.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to remove artist from favorites");
+      }
+
+      setIsFavorite(false);
+      alert(`${selectedArtist.name} has been removed to your favorites`);
+    } catch (error) {
+      console.error("Error removing from favorites:", error);
+      error("Failed to add artist to favorites. Please try again.");
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
@@ -209,7 +274,7 @@ export default function SearchArtist() {
                   </AvatarFallback>
                 )}
               </Avatar>
-              <div>
+              <div className="flex-grow">
                 <CardTitle className="text-3xl">
                   {selectedArtist.name}
                 </CardTitle>
@@ -224,6 +289,37 @@ export default function SearchArtist() {
                       </span>
                     )}
                 </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  asChild
+                >
+                  <a
+                    href={selectedArtist.external_urls?.spotify}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View on Spotify
+                  </a>
+                </Button>
+
+                <Button
+                  variant={isFavorite ? "secondary" : "default"}
+                  className="flex items-center gap-2"
+                  onClick={isFavorite ? removeFromFavorites : addToFavorites}
+                  disabled={favoriteLoading}
+                >
+                  {favoriteLoading ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <Heart
+                      className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`}
+                    />
+                  )}
+                  {isFavorite ? "Remove Favorite" : "Add Favorite"}
+                </Button>
               </div>
             </CardHeader>
           </Card>

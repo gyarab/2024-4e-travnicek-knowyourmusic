@@ -5,11 +5,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LogoutButton from "@/components/LogoutButton";
 import {
   fetchArtistData,
-  fetchRandomArtistsByMainArtistGenres,
+  fetchRandomArtistsByArtistGenres,
   fetchUserFavoriteArtistsData,
 } from "@/lib/spotify";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import RemoveFavoriteButton from "@/components/dashboard/RemoveFavoriteButton";
+
+// Helper function to extract Spotify artist ID from URL
+function extractArtistIdFromUrl(spotifyUrl) {
+  if (!spotifyUrl) return null;
+
+  try {
+    // Extract the ID from the end of the URL
+    const urlParts = spotifyUrl.split("/");
+    return urlParts[urlParts.length - 1];
+  } catch (error) {
+    console.error("Error extracting artist ID from URL:", error);
+    return null;
+  }
+}
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
@@ -17,14 +32,17 @@ export default async function Dashboard() {
     redirect("/login");
   }
 
-  const artistId = "1kmpkcYbuaZ8tnFejLzkj2"; // Example: Calvin Harris
-  const artist = await fetchArtistData(artistId);
+  const favoriteArtists = await fetchUserFavoriteArtistsData(session.user.id);
 
-  const recommendedArtists = await fetchRandomArtistsByMainArtistGenres(
-    artistId
-  );
+  const favArtistIdSet = new Set();
+  favoriteArtists.map((artist, index) => {
+    const artistIdForRemoval = extractArtistIdFromUrl(artist.spotifyUrl);
+    favArtistIdSet.add(artistIdForRemoval);
+  });
 
-  const favoriteArtists = await fetchUserFavoriteArtistsData(session.user.id); // Fetch user's favorite artists
+  const recommendedArtists = await fetchRandomArtistsByArtistGenres([
+    ...favArtistIdSet,
+  ]);
 
   return (
     <div className="relative flex min-h-screen bg-gray-100 p-6">
@@ -41,33 +59,48 @@ export default async function Dashboard() {
             <p className="text-gray-600">Your favorite artists:</p>
 
             {favoriteArtists.length > 0 ? (
-              favoriteArtists.map((artist, index) => (
-                <div
-                  key={`${artist.id}-${index}`}
-                  className="flex items-center p-4 mt-4 shadow-md rounded-lg gap-4"
-                >
-                  <div className="w-1/3">
-                    <img
-                      src={artist.image}
-                      alt={artist.name}
-                      className="w-full h-auto rounded-md"
-                    />
+              favoriteArtists.map((artist, index) => {
+                // Extract artist ID from the Spotify URL
+                const artistIdForRemoval = extractArtistIdFromUrl(
+                  artist.spotifyUrl
+                );
+
+                return (
+                  <div
+                    key={`${artistIdForRemoval || "unknown"}-${index}`}
+                    className="flex items-center p-4 mt-4 shadow-md rounded-lg gap-4"
+                  >
+                    <div className="w-1/3">
+                      <img
+                        src={artist.image}
+                        alt={artist.name}
+                        className="w-full h-auto rounded-md"
+                      />
+                    </div>
+                    <div className="w-2/3 flex flex-col justify-center items-center text-center">
+                      <h3 className="text-2xl font-semibold text-gray-600">
+                        {artist.name}
+                      </h3>
+                      <Button variant="outline" className="w-full mt-2" asChild>
+                        <a href={artist.spotifyUrl} target="_blank">
+                          View on Spotify
+                        </a>
+                      </Button>
+                      {artistIdForRemoval ? (
+                        <RemoveFavoriteButton artistId={artistIdForRemoval} />
+                      ) : (
+                        <Button
+                          variant="destructive"
+                          className="w-full mt-2"
+                          disabled
+                        >
+                          Cannot Remove
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="w-2/3 flex flex-col justify-center items-center text-center">
-                    <h3 className="text-2xl font-semibold text-gray-600">
-                      {artist.name}
-                    </h3>
-                    <Button variant="outline" className="w-full mt-2" asChild>
-                      <a href={artist.spotifyUrl} target="_blank">
-                        View on Spotify
-                      </a>
-                    </Button>
-                    <Button variant="destructive" className="w-full mt-2">
-                      Remove
-                    </Button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p>No favorite artists found.</p>
             )}
