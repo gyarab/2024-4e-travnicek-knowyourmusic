@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 
 export default function ArtistDetailCard() {
   const searchParams = useSearchParams();
-  const artistID = searchParams.get("artistID");
+  const artistId = searchParams.get("artistId");
   const [artist, setArtist] = useState(null);
   const [topTracks, setTopTracks] = useState([]);
   const [error, setError] = useState(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (artistID) {
-      fetch(`/api/artist?artistID=${artistID}`)
+    if (artistId) {
+      fetch(`/api/artist?artistId=${artistId}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.error) throw new Error(data.error);
@@ -22,15 +24,56 @@ export default function ArtistDetailCard() {
         })
         .catch((err) => setError(err.message));
 
-      fetch(`/api/top-tracks?artistID=${artistID}`)
+      fetch(`/api/top-tracks?artistId=${artistId}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.error) throw new Error(data.error);
           setTopTracks(data);
         })
         .catch((err) => setError(err.message));
+
+      fetch(`/api/favorites/check?artistId=${artistId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.error) throw new Error(data.error);
+          setIsFavorite(data.isFavorite);
+        })
+        .catch((err) => {
+          console.error("Error checking favorite status:", err);
+        });
     }
-  }, [artistID]);
+  }, [artistId]);
+
+  const handleToggleFavorite = async () => {
+    if (!artistId || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const endpoint = isFavorite
+        ? `/api/favorites/remove`
+        : `/api/favorites/add`;
+
+      const response = await fetch(endpoint, {
+        method: isFavorite ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ artistId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update favorites");
+      }
+
+      setIsFavorite(!isFavorite);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (error) return <p className="text-red-500">Error: {error}</p>;
   if (!artist)
@@ -71,18 +114,35 @@ export default function ArtistDetailCard() {
           <p>
             <strong>Followers:</strong> {artist.followers?.toLocaleString()}
           </p>
-          <a
-            href={artist.spotifyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block mt-4 text-center text-white bg-green-600 hover:bg-green-700 py-2 px-4 rounded-md"
-          >
-            View on Spotify
-          </a>
+          <div className="mt-4 flex gap-2">
+            <a
+              href={artist.spotifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 block text-center text-white bg-green-600 hover:bg-green-700 py-2 px-4 rounded-md"
+            >
+              View on Spotify
+            </a>
+
+            <Button
+              onClick={handleToggleFavorite}
+              disabled={isSubmitting}
+              variant={isFavorite ? "destructive" : "default"}
+              className="flex-1"
+            >
+              {isSubmitting
+                ? "Processing..."
+                : isFavorite
+                ? "Remove Favorite"
+                : "Add Favorite"}
+            </Button>
+          </div>
         </div>
         <div className="mt-4">
           <Link href="/dashboard">
-            <Button variant="outline" className="w-full">← Back to Dashboard</Button>
+            <Button variant="outline" className="w-full">
+              ← Back to Dashboard
+            </Button>
           </Link>
         </div>
       </section>

@@ -2,17 +2,17 @@ import { fetchArtistData } from "@/lib/spotify";
 
 export async function GET(req) {
 	const { searchParams } = new URL(req.url);
-	const artistID = searchParams.get("artistID");
+	const artistId = searchParams.get("artistId");
 
-	if (!artistID) {
-		return new Response(JSON.stringify({ error: "Missing artistID" }), {
+	if (!artistId) {
+		return new Response(JSON.stringify({ error: "Missing artistId" }), {
 			status: 400,
 			headers: { "Content-Type": "application/json" },
 		});
 	}
 
 	try {
-		const artist = await fetchArtistData(artistID);
+		const artist = await fetchArtistData(artistId);
 		return new Response(JSON.stringify(artist), {
 			status: 200,
 			headers: { "Content-Type": "application/json" },
