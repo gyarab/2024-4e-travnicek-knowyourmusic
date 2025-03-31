@@ -35,7 +35,6 @@ export default function RemoveFavoriteButton({ artistId }) {
         });
 
         const responseData = await response.json();
-        console.log("Server response:", responseData);
 
         if (!response.ok) {
           throw new Error(responseData.error || "Failed to remove artist");

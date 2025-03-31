@@ -1,8 +1,17 @@
 // app/api/search-artists/route.js
 import { searchArtists } from "@/lib/spotify";
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET(request) {
+	const session = await getServerSession(authOptions);
+	if (!session)
+		return NextResponse.json(
+			{ error: "You must be authorized to perform this action" },
+			{ status: 400 },
+		);
+
 	// Extract search query from URL parameters
 	const { searchParams } = new URL(request.url);
 	const query = searchParams.get("q");

@@ -29,7 +29,20 @@ export default function LoginPage() {
 		if (res.error) {
 			setError(res.error);
 		} else {
-			router.push("/dashboard"); // Redirect on success
+			// Fetch the user's survey status
+			try {
+				const response = await fetch("/api/user/survey-status");
+				const data = await response.json();
+
+				if (!data.hasCompletedSurvey) {
+					router.push("/artist-selection");
+				} else {
+					router.push("/dashboard");
+				}
+			} catch (error) {
+				console.error("Error checking survey status:", error);
+				router.push("/dashboard"); // Fallback to dashboard on error
+			}
 		}
 	};
 

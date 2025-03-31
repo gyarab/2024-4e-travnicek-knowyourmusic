@@ -23,7 +23,7 @@ export default function ArtistCard({ artist, isSelected, onSelect, onRemove }) {
       }`}
     >
       <div className="relative pt-[100%] bg-muted">
-        <Image src={imageUrl} alt={artist.name} width="128" height="128" />
+        <Image src={imageUrl} alt={artist.name} fill />
       </div>
 
       <CardContent className="p-3">

@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
-import { users } from "@/lib/userSchema";
 import bcrypt from "bcryptjs";
 
 export const authOptions = {
@@ -25,10 +24,18 @@ export const authOptions = {
 				);
 				if (!isValid) throw new Error("Invalid password");
 
-				return { id: user.id, name: user.name, email: user.email };
+				return {
+					id: user.id,
+					name: user.name,
+					email: user.email,
+					hasCompletedSurvey: user.hasCompletedSurvey,
+				};
 			},
 		}),
 	],
+	pages: {
+		signIn: "/login",
+	},
 	secret: process.env.NEXTAUTH_SECRET,
 	session: {
 		strategy: "jwt",
@@ -39,6 +46,7 @@ export const authOptions = {
 				token.id = user.id;
 				token.name = user.name;
 				token.email = user.email;
+				token.hasCompletedSurvey = user.hasCompletedSurvey;
 			}
 			return token;
 		},
@@ -47,6 +55,7 @@ export const authOptions = {
 				session.user.id = token.id;
 				session.user.name = token.name;
 				session.user.email = token.email;
+				session.user.hasCompletedSurvey = token.hasCompletedSurvey;
 			}
 			return session;
 		},

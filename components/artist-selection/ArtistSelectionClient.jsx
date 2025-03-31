@@ -142,7 +142,7 @@ export default function ArtistSelectionClient({
           <h3 className="text-xl font-semibold flex items-center gap-2">
             <Info className="h-5 w-5" /> Your Selected Artists
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {selectedArtists.map((artist) => (
               <ArtistCard
                 key={artist.id}
@@ -178,7 +178,7 @@ export default function ArtistSelectionClient({
         {searchQuery && (
           <div className="mt-4">
             {isSearching ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i}>
                     <Skeleton className="aspect-square w-full rounded-md" />
@@ -203,7 +203,7 @@ export default function ArtistSelectionClient({
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {filteredSearchResults.map((artist) => (
                   <ArtistCard
                     key={artist.id}
@@ -223,7 +223,7 @@ export default function ArtistSelectionClient({
       {filteredPopularArtists.length > 0 && (
         <div className="space-y-3 mt-4">
           <h3 className="text-xl font-semibold">Popular Artists</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {filteredPopularArtists.map((artist) => (
               <ArtistCard
                 key={artist.id}

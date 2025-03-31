@@ -1,25 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+	const router = useRouter();
 	const [email, setEmail] = useState("");
 	const [name, setName] = useState("");
 	const [password, setPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
+	const [countdown, setCountdown] = useState(null);
+
+	useEffect(() => {
+		if (countdown === 0) {
+			router.push("/login");
+		}
+
+		if (countdown !== null) {
+			const timer = setTimeout(() => {
+				setCountdown(countdown - 1);
+			}, 1000);
+
+			return () => clearTimeout(timer);
+		}
+	}, [countdown, router]);
 
 	const handleRegister = async (e) => {
 		e.preventDefault();
 		setError("");
 		setSuccess("");
+		setCountdown(null);
 
 		if (password.length < 6) {
 			setError("Password must be at least 6 characters long.");
@@ -40,7 +58,8 @@ export default function RegisterPage() {
 		if (!res.ok) {
 			setError(data.error);
 		} else {
-			setSuccess("Registration successful! You can now log in.");
+			setSuccess("Registration successful! Redirecting to login page in");
+			setCountdown(5); // Start the 5-second countdown
 		}
 	};
 
@@ -62,7 +81,12 @@ export default function RegisterPage() {
 					{success && (
 						<Alert className="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-4">
 							<AlertTitle>Success</AlertTitle>
-							<AlertDescription>{success}</AlertDescription>
+							<AlertDescription>
+								{success}{" "}
+								{countdown !== null && (
+									<span className="font-bold">{countdown} seconds</span>
+								)}
+							</AlertDescription>
 						</Alert>
 					)}
 					<form onSubmit={handleRegister}>
