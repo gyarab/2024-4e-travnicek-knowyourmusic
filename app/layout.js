@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -31,13 +30,11 @@ export default function RootLayout({ children }) {
 						borderBottom: "1px solid #ccc",
 					}}
 				>
-					<Link href="/">Home</Link> |<Link href="/dashboard">Dashboard</Link> |
-					<Link href="/about">About</Link> |
-					<Link href="/contacts">Contacts</Link> |
-					<Link href="/search-artist">Search Artist</Link>
+					<Link href="/dashboard">Dashboard</Link> |
+					<Link href="/artist-selection"> Initial survey</Link> |
+					<Link href="/search-artist"> Search Artist</Link>
 				</nav>
 				<main>{children}</main>
-				<Toaster />
 			</body>
 		</html>
 	);

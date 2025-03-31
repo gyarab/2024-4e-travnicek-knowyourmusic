@@ -5,15 +5,14 @@ import { useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Search, Info } from "lucide-react";
 import ArtistCard from "./ArtistCard";
-import SearchResults from "./SearchResults";
 
 export default function ArtistSelectionClient({
   userId,
   initialPopularArtists = [],
 }) {
-  const { toast } = useToast();
   const router = useRouter();
   const [popularArtists] = useState(initialPopularArtists);
   const [selectedArtists, setSelectedArtists] = useState([]);
@@ -28,11 +27,9 @@ export default function ArtistSelectionClient({
   // Handle artist selection
   const handleSelectArtist = (artist) => {
     if (selectedArtists.length >= MAX_SELECTIONS) {
-      toast({
-        title: "Selection Limit Reached",
-        description: `You can only select up to ${MAX_SELECTIONS} artists.`,
-        variant: "destructive",
-      });
+      alert(
+        `Selection Limit Reached: You can only select up to ${MAX_SELECTIONS} artists.`
+      );
       return;
     }
 
@@ -59,9 +56,7 @@ export default function ArtistSelectionClient({
 
     try {
       setIsSearching(true);
-      const response = await fetch(
-        `/api/search-artists?q=${searchQuery}`
-      );
+      const response = await fetch(`/api/search-artists?q=${searchQuery}`);
 
       if (!response.ok) {
         throw new Error("Search failed");
@@ -70,11 +65,7 @@ export default function ArtistSelectionClient({
       const data = await response.json();
       setSearchResults(data || []);
     } catch (error) {
-      toast({
-        title: "Search Failed",
-        description: "Unable to search for artists. Please try again.",
-        variant: "destructive",
-      });
+      alert("Search Failed: Unable to search for artists. Please try again.");
     } finally {
       setIsSearching(false);
     }
@@ -83,11 +74,7 @@ export default function ArtistSelectionClient({
   // Handle submit
   const handleSubmit = async () => {
     if (selectedArtists.length === 0) {
-      toast({
-        title: "No Artists Selected",
-        description: "Please select at least one artist.",
-        variant: "destructive",
-      });
+      alert("No Artists Selected: Please select at least one artist.");
       return;
     }
 
@@ -110,25 +97,31 @@ export default function ArtistSelectionClient({
         throw new Error(errorData.message || "Failed to save selections");
       }
 
-      toast({
-        title: "Success!",
-        description: "Your favorite artists have been saved.",
-      });
+      alert("Success! Your favorite artists have been saved.");
 
       // Redirect to dashboard
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
-      toast({
-        title: "Save Failed",
-        description:
-          error.message || "Unable to save your selections. Please try again.",
-        variant: "destructive",
-      });
+      alert(
+        `Save Failed: ${
+          error.message || "Unable to save your selections. Please try again."
+        }`
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Filter out selected artists from search results
+  const filteredSearchResults = searchResults.filter(
+    (artist) => !selectedArtists.some((selected) => selected.id === artist.id)
+  );
+
+  // Filter out selected artists from popular artists
+  const filteredPopularArtists = popularArtists.filter(
+    (artist) => !selectedArtists.some((selected) => selected.id === artist.id)
+  );
 
   return (
     <div className="space-y-6">
@@ -136,7 +129,7 @@ export default function ArtistSelectionClient({
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span>Selection Progress</span>
-          <span>
+          <span className="font-medium">
             {selectedArtists.length}/{MAX_SELECTIONS} artists
           </span>
         </div>
@@ -145,15 +138,18 @@ export default function ArtistSelectionClient({
 
       {/* Selected artists section */}
       {selectedArtists.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Your Selected Artists</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="space-y-3">
+          <h3 className="text-xl font-semibold flex items-center gap-2">
+            <Info className="h-5 w-5" /> Your Selected Artists
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {selectedArtists.map((artist) => (
               <ArtistCard
                 key={artist.id}
                 artist={artist}
                 isSelected={true}
                 onRemove={() => handleRemoveArtist(artist.id)}
+                onSelect={() => {}}
               />
             ))}
           </div>
@@ -161,8 +157,10 @@ export default function ArtistSelectionClient({
       )}
 
       {/* Search section */}
-      <div className="space-y-4 mt-4">
-        <h3 className="text-lg font-semibold">Search for Artists</h3>
+      <div className="space-y-3">
+        <h3 className="text-xl font-semibold flex items-center gap-2">
+          <Search className="h-5 w-5" /> Search for Artists
+        </h3>
         <form onSubmit={handleSearch} className="flex gap-2">
           <Input
             type="text"
@@ -176,38 +174,76 @@ export default function ArtistSelectionClient({
           </Button>
         </form>
 
+        {/* Search results */}
         {searchQuery && (
-          <SearchResults
-            results={searchResults}
-            selectedArtistIds={selectedArtists.map((a) => a.id)}
-            onSelect={handleSelectArtist}
-            isLoading={isSearching}
-          />
+          <div className="mt-4">
+            {isSearching ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i}>
+                    <Skeleton className="aspect-square w-full rounded-md" />
+                    <div className="space-y-2 mt-2">
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredSearchResults.length === 0 ? (
+              <div className="text-center p-6 bg-muted/50 rounded-lg">
+                {searchResults.length === 0 ? (
+                  <p className="text-muted-foreground">
+                    No artists found matching "{searchQuery}"
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">
+                    All found artists are already selected
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {filteredSearchResults.map((artist) => (
+                  <ArtistCard
+                    key={artist.id}
+                    artist={artist}
+                    isSelected={false}
+                    onSelect={() => handleSelectArtist(artist)}
+                    onRemove={() => {}}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
       {/* Popular artists section */}
-      <div className="space-y-4 mt-4">
-        <h3 className="text-lg font-semibold">Popular Artists</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {popularArtists.map((artist) => (
-            <ArtistCard
-              key={artist.id}
-              artist={artist}
-              isSelected={selectedArtists.some((a) => a.id === artist.id)}
-              onSelect={() => handleSelectArtist(artist)}
-              onRemove={() => handleRemoveArtist(artist.id)}
-            />
-          ))}
+      {filteredPopularArtists.length > 0 && (
+        <div className="space-y-3 mt-4">
+          <h3 className="text-xl font-semibold">Popular Artists</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {filteredPopularArtists.map((artist) => (
+              <ArtistCard
+                key={artist.id}
+                artist={artist}
+                isSelected={false}
+                onSelect={() => handleSelectArtist(artist)}
+                onRemove={() => {}}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Submit button */}
-      <div className="pt-4 flex justify-center">
+      <div className="pt-4 flex justify-center mt-8">
         <Button
           size="lg"
           onClick={handleSubmit}
           disabled={selectedArtists.length === 0 || isSubmitting}
+          className="px-8"
         >
           {isSubmitting ? "Saving..." : "Save Selections & Continue"}
         </Button>
