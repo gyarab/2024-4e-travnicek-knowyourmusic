@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b63c7c1b-7db4-4d50-af8a-fcc82660a473",
+  "id": "6eba12b1-d76e-4f59-ab3b-563c76edf543",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "user_favorite_artists": {
@@ -80,6 +80,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "has_completed_survey": {
+          "name": "has_completed_survey",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
         },
         "created_at": {
           "name": "created_at",

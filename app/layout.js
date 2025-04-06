@@ -58,7 +58,7 @@ export default function RootLayout({ children }) {
 						<nav className="flex h-16 items-center justify-between">
 							<div className="flex-shrink-0">
 								<h1 className="text-xl font-semibold text-gray-900">
-									Music Explorer
+									Know Your Music
 								</h1>
 							</div>
 							<div className="flex items-center space-x-4">
